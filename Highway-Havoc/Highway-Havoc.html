@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Enhanced Highway Car Game</title>
+  <!-- Main CSS styles for the game UI, canvas, and glassy purple buttons -->
+  <style>
+    /* General body styling with gradient background */
+    body {
+      margin: 0;
+      background: linear-gradient(45deg, #1a1a2e, #16213e);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      color: white;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Game canvas with border and shadow */
+    canvas {
+      background: #222;
+      display: none;
+      margin: 10px auto;
+      border: 2px solid #555;
+      box-shadow: 0 0 20px rgba(0,255,255,0.3);
+      position: relative;
+    }
+
+    /* Score display in top-right corner */
+    #score {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 18px;
+      color: #00ffff;
+      z-index: 10;
+    }
+
+    /* Hearts container for player lives */
+    #heartsContainer {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: none;
+      z-index: 10;
+    }
+    .heart {
+      display: inline-block;
+      font-size: 30px;
+      color: #ff4444;
+      margin-right: 5px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    .heart.lost {
+      color: #666;
+    }
+
+    /* Ammo display for combat/survival modes */
+    #ammoContainer {
+      display: none;
+      position: absolute;
+      top: 70px;
+      left: 20px;
+      z-index: 10;
+    }
+    .bullet-icon {
+      display: inline-block;
+      font-size: 24px;
+      color: #ffd700;
+      margin-right: 4px;
+      text-shadow: 0 0 5px rgba(255,215,0,0.7);
+    }
+
+    /* Mode selector with glassy effect */
+    #modeSelector {
+      margin: 20px 0;
+      padding: 20px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+    }
+    #modeSelector h3 {
+      color: #00ffff;
+      margin-bottom: 15px;
+    }
+
+    /* Glassy purple button styles for all buttons and select elements */
+    button, select#roadSelect {
+      padding: 12px 24px;
+      margin: 10px;
+      background: linear-gradient(135deg, rgba(138, 43, 226, 0.8), rgba(75, 0, 130, 0.8));
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.1s ease;
+      box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+      backdrop-filter: blur(5px);
+    }
+    button:hover, select#roadSelect:hover {
+      background: linear-gradient(135deg, rgba(147, 112, 219, 0.9), rgba(106, 90, 205, 0.9));
+      box-shadow: 0 6px 20px rgba(138, 43, 226, 0.6);
+      transform: translateY(-2px);
+    }
+    button:active, select#roadSelect:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 10px rgba(138, 43, 226, 0.3);
+    }
+
+    /* Specific styles for mode buttons */
+    .mode-button {
+      padding: 15px 25px;
+    }
+    .mode-button.selected {
+      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+      transform: scale(1.05);
+    }
+
+    /* Road selector dropdown with custom arrow */
+    select#roadSelect {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 12px top 50%;
+      width: 220px;
+    }
+    select#roadSelect:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 2px 10px rgba(138, 43, 226, 0.3);
+    }
+    select#roadSelect option {
+      background: rgba(75, 0, 130, 0.9);
+      color: #fff;
+      font-size: 14px;
+    }
+
+    /* Smaller buttons for in-game music controls */
+    .mini-btn {
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 15px;
+    }
+
+    /* Controls section for game instructions */
+    .controls {
+      margin: 20px 0;
+      font-size: 14px;
+      color: #ccc;
+    }
+    .controls h4 {
+      color: #00ffff;
+      margin-bottom: 10px;
+    }
+
+    /* Road type display */
+    .road-type {
+      color: #00ff00;
+      font-size: 16px;
+      margin: 5px;
+    }
+
+    /* Game over screen with glassy effect */
+    #gameOverScreen {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      z-index: 20;
+    }
+
+    /* Loading screen */
+    #loadingScreen {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      z-index: 30;
+    }
+
+    /* FPS counter */
+    #fps {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: #00ff00;
+      font-size: 14px;
+      display: none;
+    }
+
+    /* High score display */
+    #highScores {
+      font-size: 18px;
+      color: #0ff;
+      margin-top: 20px;
+    }
+
+    /* Music controls container */
+    #musicControls {
+      margin: 20px 0;
+    }
+
+    /* Spacer for canvas layout */
+    #canvasSpacer {
+      height: 4rem;
+      display: none;
+    }
+
+    /* Volume slider container */
+    #volumeControl {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 12px;
+    }
+    #volumeSlider {
+      width: 120px;
+      height: 6px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255,255,255,0.3);
+      border-radius: 3px;
+      outline: none;
+    }
+    #volumeSlider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      background: #ffd700;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    #volumeSlider::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      background: #ffd700;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- FPS counter display -->
+  <div id="fps">FPS: 0</div>
+
+  <!-- Loading screen shown during asset loading -->
+  <div id="loadingScreen">
+    <h3>Loading Game Assets...</h3>
+    <div id="loadingProgress">Initializing...</div>
+  </div>
+
+  <!-- Mode selector for choosing game mode -->
+  <div id="modeSelector">
+    <h3>Choose Game Mode</h3>
+    <button class="mode-button selected" data-mode="classic">Classic</button>
+    <button class="mode-button" data-mode="combat">Combat</button>
+    <button class="mode-button" data-mode="survival">Survival</button>
+    <button class="mode-button" data-mode="truckers">Truckers</button>
+
+    <!-- High score display for each mode -->
+    <div id="highScores">
+      Classic: <span id="h-classic">0</span>&nbsp;&nbsp;
+      Combat: <span id="h-combat">0</span>&nbsp;&nbsp;
+      Survival: <span id="h-survival">0</span>&nbsp;&nbsp;
+      Truckers: <span id="h-truckers">0</span>
+    </div>
+
+    <!-- Road type selector -->
+    <div id="roadPicker">
+      <label style="color:#0ff;font-size:16px;">Starting Road:
+        <select id="roadSelect">
+          <option value="city">City Highway</option>
+          <option value="desert">Desert Road</option>
+          <option value="snow">Snowy Pass</option>
+          <option value="night">Night Highway</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <!-- 4-line spacer between selector and buttons -->
+  <div style="height:4rem;"></div>
+
+  <!-- Start and reset high score buttons -->
+  <button id="startButton">Start Game</button>
+  <button id="resetHighScores">Reset High Scores</button>
+
+  <!-- Spacer for canvas layout -->
+  <div id="canvasSpacer"></div>
+
+  <!-- Game canvas for rendering -->
+  <canvas id="gameCanvas" width="600" height="630"></canvas>
+
+  <!-- Score display during gameplay -->
+  <div id="score">Score: 0</div>
+
+  <!-- Player lives display -->
+  <div id="heartsContainer">
+    <span class="heart" id="heart1">♥</span>
+    <span class="heart" id="heart2">♥</span>
+    <span class="heart" id="heart3">♥</span>
+  </div>
+
+  <!-- In-game music controls -->
+  <div id="gameMusic">
+    <button class="mini-btn" id="gPlay">▶</button>
+    <button class="mini-btn" id="gPause">⏸</button>
+    <button class="mini-btn" id="gNext">⏭</button>
+    <span id="volumeControl">
+      <span style="color:#0ff;font-size:14px;">🔊</span>
+      <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.7" title="Volume">
+    </span>
+  </div>
+
+  <!-- Ammo display for combat/survival modes -->
+  <div id="ammoContainer"></div>
+
+  <!-- Road type display -->
+  <div class="road-type">
+    Road: <span id="roadType"></span>
+  </div>
+
+  <!-- Restart button (shown during gameplay) -->
+  <button id="restartButton" style="display:none;">Restart</button>
+
+  <!-- Game over screen -->
+  <div id="gameOverScreen">
+    <h2>Game Over!</h2>
+    <p>Final Score: <span id="finalScore">0</span></p>
+    <p>Best: <span id="bestScore">0</span></p>
+    <button id="playAgainButton">Play Again</button>
+  </div>
+
+  <!-- Game controls instructions -->
+  <div id="controls" class="controls">
+    <h4>Controls</h4>
+    <p>← → Arrow Keys: Move | Spacebar: Shoot (Combat Mode) | Collect power-ups for abilities!</p>
+  </div>
+
+  <!-- Load scripts in order: audio, abilities, then game logic -->
+  <script src="js/audio.js"></script>
+  <script src="js/abilitiesAndLives.js"></script>
+  <script src="js/game.js"></script>
+
+  <!-- Link volume slider to audio -->
+  <script>
+    const slider = document.getElementById('volumeSlider');
+    slider.addEventListener('input', e => {
+      // If your audio.js exposes window.gameAudio.setVolume, use it – otherwise adapt
+      if (window.gameAudio && typeof window.gameAudio.setVolume === 'function') {
+        window.gameAudio.setVolume(parseFloat(e.target.value));
+      }
+      // Fallback: try setting every <audio> tag volume
+      document.querySelectorAll('audio').forEach(a => a.volume = parseFloat(e.target.value));
+    });
+  </script>
+</body>
+</html>
